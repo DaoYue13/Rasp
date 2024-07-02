@@ -2,37 +2,30 @@
 #include <wiringPi.h>
 #include <wiringPiI2C.h>
 
-#define ADC_ADDRESS 0x48 // ADC I2C 주소
+int main()
+{
+    int fd = wiringPiI2CSetup(0x48);    // Device reset
 
-// ADC 채널에서 값을 읽는 함수
-int readADC(int fd, int channel) {
-    wiringPiI2CWrite(fd, channel); // 채널 설정
-    return wiringPiI2CRead(fd); // 값 읽기
-}
+    int v1,v2,v3;
+    float f,f2,f3;
 
-int main(void) {
-    int fd = wiringPiI2CSetup(ADC_ADDRESS);
-    if (fd == -1) {
-        printf("I2C 설정 실패!\n");
-        return 1;
-    }
+    while(1)
+    {
 
-    while (1) {
-        int jodo = readADC(fd, 0); // 조도 센서 값을 0번 채널에서 읽기
-        float jodof = (float)(jodo / 255.0 * 5.0);
-        printf("Light sensor input level = %d (%.1fv)\n", jodo, jodof);
-        delay(500);
+        wiringPiI2CWrite(fd, 0);        // ch00 (PR) select
+        v1 = wiringPiI2CRead(fd);
+        f = (float)((v1/255.0)*5.0);
+        delay(100);
 
-        int ondo = readADC(fd, 1); // 온도 센서 값을 1번 채널에서 읽기
-        float ondof = (float)(ondo / 255.0 * 5.0);
-        printf("Temperature sensor input level = %d (%.1fv)\n", ondo, ondof);
-        delay(500);
-        
-        int vr = readADC(fd, 3); // VR 값을 3번 채널에서 읽기   //p6 출력
-        float vrf = (float)(vr / 255.0 * 5.0);
-        printf("VR input level = %d (%.1fv)\n", vr, vrf);
+        wiringPiI2CWrite(fd, 1);        // ch01 (TR) select
+        v2 = wiringPiI2CRead(fd);       // clear
+        f2 = (float)((v2/255.0)*5.0);
+        delay(100);
+
+        wiringPiI2CWrite(fd, 3);        // ch03 (VR) select
+        v3 = wiringPiI2CRead(fd);
+        f3 = (float)((v3/255.0)*5.0);
+        printf("ADC input level = %d %d %d(%4.1fv %4.1f %4.1f)\n",v1,v2,v3,f,f2,f3);
         delay(500);
     }
-
-    return 0;
 }
